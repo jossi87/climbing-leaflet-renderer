@@ -10,19 +10,12 @@ const app = express();
 app.use(express.json());
 
 app.post('/render', async (req, res) => {
-    console.log('--- DATA RECEIVED ---');
-    console.log(JSON.stringify(req.body, null, 2));
-    console.log('---------------------');
-
+    console.log('--- RENDERING MAP ---');
+    
     const { 
-        markers = [], 
-        outlines = [], 
-        slopes = [], 
-        defaultCenter = { lat: 59, lng: 6 }, 
-        defaultZoom = 13, 
-        showPhotoNotMap = false,
-        width = 800,
-        height = 600
+        markers = [], outlines = [], slopes = [], 
+        defaultCenter = { lat: 59, lng: 6 }, defaultZoom = 13, 
+        showPhotoNotMap = false, width = 800, height = 600
     } = req.body;
 
     let browser;
@@ -32,7 +25,6 @@ app.post('/render', async (req, res) => {
         });
         const page = await browser.newPage();
         await page.setViewport({ width, height });
-
         await page.goto('file:///app/render.html');
 
         await page.evaluate(async (data) => {
@@ -44,15 +36,13 @@ app.post('/render', async (req, res) => {
         }, { markers, outlines, slopes, defaultCenter, defaultZoom, showPhotoNotMap });
 
         const imageBuffer = await page.screenshot({ type: 'png' });
-        
-        res.set('Content-Type', 'image/png');
-        res.send(imageBuffer);
+        res.set('Content-Type', 'image/png').send(imageBuffer);
     } catch (err) {
-        console.error('Rendering Error:', err);
-        res.status(500).send('Map rendering failed');
+        console.error('Error:', err);
+        res.status(500).send('Failed');
     } finally {
         if (browser) await browser.close();
     }
 });
 
-app.listen(3000, () => console.log('Renderer listening on port 3000 (ESM Mode)'));
+app.listen(3000, () => console.log('Renderer running'));
