@@ -1,0 +1,17 @@
+# Ignore local dependencies
+node_modules/
+
+# Ignore git history
+.git
+.gitignore
+
+# Ignore Github Actions
+.github
+
+# Ignore local documentation/logs
+README.md
+npm-debug.log
+
+# Ignore any local screenshots you took while testing
+*.png
+screenshots/

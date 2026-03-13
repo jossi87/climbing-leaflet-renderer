@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; background: #fff; }
+        .buldreinfo-tooltip-compact { padding: 0px !important; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        async function initMap(leaflet) {
+            const map = L.map('map', { zoomControl: false }).setView(leaflet.defaultCenter, leaflet.defaultZoom);
+            const group = L.featureGroup();
+            
+            // Icons are served from the local /assets folder in this project
+            const parkingIcon = L.icon({ iconUrl: 'assets/parking_lot_maps.png', iconAnchor: [15, 15] });
+            const rockIcon = L.icon({ iconUrl: 'assets/rock.png', iconAnchor: [15, 15] });
+
+            leaflet.markers.forEach(m => {
+                let icon = m.iconType === 'PARKING' ? parkingIcon : (m.iconType === 'ROCK' ? rockIcon : new L.Icon.Default());
+                let marker = L.marker([m.lat, m.lng], { icon });
+                if (m.label) marker.bindTooltip(m.label, { permanent: true, opacity: 0.8, className: 'buldreinfo-tooltip-compact' });
+                marker.addTo(group);
+            });
+
+            leaflet.outlines.forEach(o => {
+                const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
+                let poly = L.polygon(coords);
+                if (o.label) poly.bindTooltip(o.label, { permanent: true, opacity: 0.8, className: 'buldreinfo-tooltip-compact' });
+                poly.addTo(group);
+            });
+
+            group.addTo(map);
+            if (group.getBounds().isValid()) map.fitBounds(group.getBounds().pad(0.05));
+
+            const tileUrl = leaflet.showPhotoNotMap 
+                ? 'https://waapi.webatlas.no/maptiles/tiles/webatlas-orto-newup/wa_grid/{z}/{x}/{y}.jpeg?api_key=b8e36d51-119a-423b-b156-d744d54123d5'
+                : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+            const tileLayer = L.tileLayer(tileUrl).addTo(map);
+
+            return new Promise((resolve) => {
+                tileLayer.on('load', () => setTimeout(resolve, 500));
+            });
+        }
+    </script>
+</body>
+</html>

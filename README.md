@@ -1,0 +1,52 @@
+# climbing-leaflet-renderer
+
+A microservice for the **climbing** ecosystem. 
+It renders Leaflet maps with custom markers and polygons into PNG images using headless Chrome (Puppeteer).
+
+## 🚁 Purpose
+This service replaces the legacy local-script execution in the `climbing-ws` (Java) backend. By running as a standalone Docker container, it eliminates environment-specific path issues and keeps the main API light.
+
+
+## 𝓑 API Usage
+
+### Render Map
+**Endpoint:** `POST /render`  
+**Content-Type:** `application/json`
+
+**Example Payload:**
+```json
+{
+  "defaultCenter": [58.969975, 5.733107],
+  "defaultZoom": 15,
+  "showPhotoNotMap": false,
+  "markers": [
+    { "lat": 58.97, "lng": 5.73, "label": "Start", "iconType": "ROCK" }
+  ],
+  "outlines": [],
+  "slopes": [],
+  "legends": ["Legend text line 1"]
+}
+```
+
+**Response:** Raw `image/png` binary data.
+
+## 🎷 Assets & Icons
+The renderer expects custom icons to be located in the `/assets` folder:
+* `assets/parking_lot_maps.png
+* `assets/rock.png
+
+## 😬 Docker Integration
+This image is built automatically via GitHub Actions and pushed to `jossi87/climbing-leaflet-renderer`.
+
+To run locally for testing:
+```bash
+docker build -t climbing-leaflet-renderer .
+docker run -p 3000:3000 climbing-leaflet-renderer
+``p
+
+## 𝓂 Project Structure
+* `index.js`: Express server and Puppeteer orchestration.
+* `render.html`: The Leaflet template and injection logic.
+* `assets/`: Static map icons.
+* `.github/workflows/`: Automated CI/CD pipeline.
+
