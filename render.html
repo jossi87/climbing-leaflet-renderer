@@ -12,10 +12,10 @@
         .icon-box {
             display: flex; align-items: center; justify-content: center;
             color: white; font-family: sans-serif; font-weight: bold;
-            border: 2px solid white; border-radius: 4px; box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);
         }
-        .parking-box { background: #2D72D9; font-size: 16px; width: 24px; height: 24px; }
-        .rock-box { background: #666; font-size: 10px; width: 34px; height: 24px; text-transform: uppercase; }
+        .parking-box { background: #2D72D9; font-size: 14px; width: 22px; height: 22px; border-radius: 4px; }
+        .rock-box { background: #444; font-size: 13px; width: 26px; height: 26px; border-radius: 50%; }
     </style>
 </head>
 <body>
@@ -26,26 +26,28 @@
                          .setView(leaflet.defaultCenter, leaflet.defaultZoom);
             const group = L.featureGroup();
             
-            const pIcon = L.divIcon({
-                html: '<div class="icon-box parking-box">P</div>',
-                className: 'custom-div-icon', iconSize: [24, 24], iconAnchor: [12, 12]
-            });
-
-            const rIcon = L.icon({ 
-                html: '<div class="icon-box rock-box">ROCK</div>',
-                className: 'custom-div-icon', iconSize: [34, 24], iconAnchor: [17, 12]
-            });
-            
-            const rockDivIcon = L.divIcon({
-                html: '<div class="icon-box rock-box">ROCK</div>',
-                className: 'custom-div-icon', iconSize: [34, 24], iconAnchor: [17, 12]
-            });
-
             (leaflet.markers || []).forEach(m => {
-                let icon = m.iconType === 'PARKING' ? pIcon : (m.iconType === 'ROCK' ? rockDivIcon : null);
-                if (icon) {
-                    L.marker([m.lat, m.lng], { icon }).addTo(group);
+                let html = '';
+                let className = 'icon-box ';
+                let size = [26, 26];
+
+                if (m.iconType === 'PARKING') {
+                    html = 'P';
+                    className += 'parking-box';
+                    size = [22, 22];
+                } else if (m.iconType === 'ROCK') {
+                    // This uses the 'label' field from your Java record
+                    html = m.label || ''; 
+                    className += 'rock-box';
                 }
+
+                const icon = L.divIcon({
+                    html: `<div class="${className}">${html}</div>`,
+                    className: 'custom-div-icon',
+                    iconSize: size,
+                    iconAnchor: [size[0]/2, size[1]/2]
+                });
+                L.marker([m.lat, m.lng], { icon }).addTo(group);
             });
 
             (leaflet.outlines || []).forEach(o => {
