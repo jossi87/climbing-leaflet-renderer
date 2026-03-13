@@ -7,26 +7,33 @@
     <style>
         html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; background: #fff; }
         .buldreinfo-tooltip-compact { 
-            padding: 2px 4px !important; 
+            padding: 2px 5px !important; 
             font-size: 12px; 
             font-weight: bold; 
-            background-color: white !important; /* Force white background */
-            border: 1px solid #666 !important;
+            color: #000 !important;
+            background-color: #ffffff !important; 
+            border: 1px solid #444 !important;
             border-radius: 4px;
             white-space: nowrap;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
         }
+        /* Fix to ensure tooltips don't get cut off by tile edges */
+        .leaflet-tooltip-pane { z-index: 650; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
         async function initMap(leaflet) {
-            const map = L.map('map', { zoomControl: false }).setView(leaflet.defaultCenter, leaflet.defaultZoom);
+            const map = L.map('map', { 
+                zoomControl: false,
+                attributionControl: false 
+            }).setView(leaflet.defaultCenter, leaflet.defaultZoom);
+            
             const group = L.featureGroup();
-	        
             const parkingIconBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH5AgKDC0u669F7AAAAHlJREFUSMft0rENgDAMRFHOf8pYmYpZGIKloEBCInp06TMv99Is90pSSueat9Z6XclK805SOn9KWms9L0m9m6mEAnuA7mYqYcAeoLuZShjwS7C7mUoY8Euwu5lKGPBL8AtuXvC6u8B7H8H+S3L3gtfdBd77CPZf8AtuXvBvF68vL974G9S9AAAAAElFTkSuQmCC";
             const rockIconBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAB7msXUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB8ElEQVR4nO2VvUvDQBTHf03SqqmDInYp6uLk6uTo6uTo6uTo6uTo6uTo6uTo6O7k6O7k6C7iYAdF7OAs9V8QtX8BaYv3yksuSdtA6AtvSXLv8+69u8shIsREAnRAn8Yt0K+L2/UeUOf6oN8CfaoN+u3G6A7789vA3wZ9A7SBeidA78AWA9shO7AL9Kk26D8I+0P18W3Qv98G/RboG6A7sMXAtske7AF9KgX9p8P+Un16G/Qv8HCH/f39XW8H9A3QFtjAtske7AE9igL9p8P+cv16G/RPBvszXv7W6S4D2yY7sAt0KA70nw7783XvbdC/C/szXv7W6C4B2yE7sAt0KB70nw7783XvbdA/Dft36N/f3/V2QN8AbYENbJvswR7QIyHof9jf9V69HdA3QFtgA9sme7AH9CgB+veG/V3v1tsBfQO0BTawbbIHe0CPmND/uL/rvXo7oG+AtSAGtki26BvQI2Lofz7s73q33g7oG2Ag2SIdoEcY9L8Y9ne9W28H9A1gyTboAD1Cof9Vf9v1W6CPZIsO0KMh9H897O96t94D+vSRbtEBejSM/v3+rvfq0/8A/ft97W3UPwBfM3vX78f69gAAAABJRU5ErkJggg==";
-	        
+            
             const parkingIcon = L.icon({ 
                 iconUrl: parkingIconBase64, 
                 iconSize: [24, 24], 
@@ -38,38 +45,46 @@
                 iconSize: [24, 24], 
                 iconAnchor: [12, 12] 
             });
-	
+
             // 1. Markers
             (leaflet.markers || []).forEach(m => {
                 let icon = m.iconType === 'PARKING' ? parkingIcon : (m.iconType === 'ROCK' ? rockIcon : new L.Icon.Default());
                 let marker = L.marker([m.lat, m.lng], { icon });
-                if (m.label) marker.bindTooltip(m.label, { permanent: true, opacity: 0.8, className: 'buldreinfo-tooltip-compact' });
+                if (m.label) marker.bindTooltip(m.label, { 
+                    permanent: true, 
+                    opacity: 1, 
+                    direction: 'top',
+                    className: 'buldreinfo-tooltip-compact' 
+                });
                 marker.addTo(group);
             });
 
-            // 2. Outlines (Polygons)
+            // 2. Outlines
             (leaflet.outlines || []).forEach(o => {
                 const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
                 let poly = L.polygon(coords, { color: '#3388ff', weight: 3 });
-                if (o.label) poly.bindTooltip(o.label, { permanent: true, opacity: 0.8, className: 'buldreinfo-tooltip-compact' });
+                if (o.label) poly.bindTooltip(o.label, { 
+                    permanent: true, 
+                    direction: 'center', 
+                    className: 'buldreinfo-tooltip-compact' 
+                });
                 poly.addTo(group);
             });
 
-            // 3. Slopes (Polylines)
+            // 3. Slopes
             (leaflet.slopes || []).forEach(s => {
                 const coords = s.slope.coordinates.map(c => [c.latitude, c.longitude]);
                 const dist = s.slope.distance;
-            
+                
                 if (coords.length > 1) {
                     let line = L.polyline(coords, { 
                         color: s.backgroundColor, 
                         weight: 4,
-                        opacity: 0.8 
+                        opacity: 0.9 
                     }).addTo(group);
             
                     if (dist > 0) {
                         const labelText = dist > 1000 ? (dist / 1000).toFixed(1) + " km" : Math.round(dist) + " m";
-                        
                         line.bindTooltip(labelText, { 
                             permanent: true, 
                             direction: 'center', 
@@ -80,7 +95,9 @@
             });
 
             group.addTo(map);
-            if (group.getBounds().isValid()) map.fitBounds(group.getBounds().pad(0.05));
+            if (group.getBounds().isValid()) {
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
 
             const tileUrl = leaflet.showPhotoNotMap 
                 ? 'https://waapi.webatlas.no/maptiles/tiles/webatlas-orto-newup/wa_grid/{z}/{x}/{y}.jpeg?api_key=b8e36d51-119a-423b-b156-d744d54123d5'
