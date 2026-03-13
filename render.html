@@ -12,31 +12,30 @@
             white-space: nowrap;
         }
         
-        /* Ensure no default Leaflet backgrounds on DivIcons */
         .leaflet-div-icon { background: transparent !important; border: none !important; }
 
-        /* BASE ICON STYLES */
-        .pin-marker {
-            width: 20px; height: 20px; border-radius: 50% 50% 50% 0;
-            position: absolute; left: 50%; top: 50%;
-            margin: -20px 0 0 -10px; box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
-            transform: rotate(-45deg);
+        /* RED DOT STYLE - Used for Rocks and all other Markers */
+        .dot-marker {
+            width: 10px; height: 10px; border-radius: 50%;
+            border: 1.5px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center;
+            background: #FF0000; /* Bright Red */
         }
         
-        /* PARKING SPECIFIC */
-        .parking-pin { background: #2D72D9; }
-        .parking-pin:after {
-            content: 'P'; color: white; font-family: sans-serif; font-weight: bold; font-size: 13px;
-            position: absolute; transform: rotate(45deg); left: 6px; top: 3px;
+        /* PARKING STYLE - Stays Blue/Square for contrast */
+        .parking-dot { 
+            background: #2D72D9; width: 18px; height: 18px; 
+            border-radius: 4px; color: white; font-family: sans-serif; 
+            font-size: 12px; font-weight: bold; 
         }
 
-        /* ROCK/BOULDER SPECIFIC */
-        .rock-pin { background: #444; }
-        .rock-label {
-            position: absolute; left: 24px; top: -18px; /* Offset text to the right and up */
-            color: #333; font-family: sans-serif; font-weight: bold;
-            white-space: nowrap; padding: 1px 3px; background: rgba(255,255,255,0.8);
-            border-radius: 3px;
+        .marker-label {
+            position: absolute; left: 16px; top: -10px;
+            color: #000; font-family: sans-serif; font-weight: bold;
+            white-space: nowrap; padding: 1px 4px; 
+            background: rgba(255,255,255,0.9); /* High opacity for readability */
+            border: 1px solid #666; border-radius: 3px;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -49,29 +48,28 @@
             const group = L.featureGroup();
             
             (leaflet.markers || []).forEach(m => {
-                let divContent = '';
-                
-                let size = [60, 30]; 
+                let html = '';
+                let size = [10, 10];
 
                 if (m.iconType === 'PARKING') {
-                    divContent = '<div class="pin-marker parking-pin"></div>';
+                    html = `<div class="dot-marker parking-dot">P</div>`;
                     size = [20, 20];
-                } else if (m.iconType === 'ROCK') {
-                    const html = m.label || ''; 
-                    const style = `font-size: ${dynamicFontSize}px;`;
-                    divContent = `<div class="pin-marker rock-pin"></div><div class="rock-label" style="${style}">${html}</div>`;
+                } else {
+                    const isRock = m.iconType === 'ROCK';
+                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 12}px;`;
+                    html = `
+                        <div class="dot-marker"></div>
+                        <div class="marker-label" style="${labelStyle}">${m.label || ''}</div>
+                    `;
                 }
 
-                if (divContent) {
-                    const anchor = (m.iconType === 'ROCK') ? [10, 20] : [10, 20];
-                    const icon = L.divIcon({
-                        html: divContent,
-                        className: 'custom-div-icon',
-                        iconSize: size,
-                        iconAnchor: anchor
-                    });
-                    L.marker([m.lat, m.lng], { icon }).addTo(group);
-                }
+                const icon = L.divIcon({
+                    html: html,
+                    className: 'custom-div-icon',
+                    iconSize: size,
+                    iconAnchor: [size[0]/2, size[1]/2]
+                });
+                L.marker([m.lat, m.lng], { icon }).addTo(group);
             });
 
             (leaflet.outlines || []).forEach(o => {
