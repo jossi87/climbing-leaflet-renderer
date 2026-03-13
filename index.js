@@ -1,9 +1,16 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const path = require('path');
+import express from 'express';
+import puppeteer from 'puppeteer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES Modules fix for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
+
+// Serves icons for the map
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.post('/render', async (req, res) => {
@@ -21,15 +28,16 @@ app.post('/render', async (req, res) => {
     let browser;
     try {
         browser = await puppeteer.launch({
+            // These flags are essential for running Puppeteer in a Docker container
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
         await page.setViewport({ width, height });
 
-        // Load the local HTML file
+        // Load the local HTML file using the file:// protocol
         await page.goto(`file://${path.join(__dirname, 'renderer.html')}`);
 
-        // Execute map initialization
+        // Execute map initialization inside the browser context
         await page.evaluate(async (data) => {
             await window.initMap(data);
         }, { markers, outlines, slopes, defaultCenter, defaultZoom, showPhotoNotMap });
@@ -39,11 +47,11 @@ app.post('/render', async (req, res) => {
         res.set('Content-Type', 'image/png');
         res.send(imageBuffer);
     } catch (err) {
-        console.error(err);
+        console.error('Rendering Error:', err);
         res.status(500).send('Map rendering failed');
     } finally {
         if (browser) await browser.close();
     }
 });
 
-app.listen(3000, () => console.log('Renderer listening on port 3000'));
+app.listen(3000, () => console.log('Renderer listening on port 3000 (ESM Mode)'));
