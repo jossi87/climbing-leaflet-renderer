@@ -1,42 +1,49 @@
-import express from 'express';
-import puppeteer from 'puppeteer';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const express = require('express');
+const puppeteer = require('puppeteer');
+const path = require('path');
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-app.use(express.json({ limit: '10mb' }));
-
-// Static assets for icons (parking, rock, etc.)
+app.use(express.json());
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.post('/render', async (req, res) => {
-    const leafletData = req.body;
-    const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-        headless: 'new'
-    });
+    const { 
+        markers = [], 
+        outlines = [], 
+        slopes = [], 
+        defaultCenter = { lat: 59, lng: 6 }, 
+        defaultZoom = 13, 
+        showPhotoNotMap = false,
+        width = 800,
+        height = 600
+    } = req.body;
 
+    let browser;
     try {
+        browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
         const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 720 });
-        
-        // Serve the HTML file via local Express to handle relative /assets correctly
-        await page.goto(`http://localhost:3000/render-page`);
-        
+        await page.setViewport({ width, height });
+
+        // Load the local HTML file
+        await page.goto(`file://${path.join(__dirname, 'renderer.html')}`);
+
+        // Execute map initialization
         await page.evaluate(async (data) => {
             await window.initMap(data);
-        }, leafletData);
+        }, { markers, outlines, slopes, defaultCenter, defaultZoom, showPhotoNotMap });
 
-        const screenshot = await page.screenshot({ type: 'png' });
-        res.type('image/png').send(screenshot);
-    } catch (e) {
-        res.status(500).send(e.message);
+        const imageBuffer = await page.screenshot({ type: 'png' });
+        
+        res.set('Content-Type', 'image/png');
+        res.send(imageBuffer);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Map rendering failed');
     } finally {
-        await browser.close();
+        if (browser) await browser.close();
     }
 });
 
-app.get('/render-page', (req, res) => res.sendFile(path.join(__dirname, 'render.html')));
-
-app.listen(3000, () => console.log('Renderer listening on 3000'));
+app.listen(3000, () => console.log('Renderer listening on port 3000'));
