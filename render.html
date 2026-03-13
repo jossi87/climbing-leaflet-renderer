@@ -45,24 +45,25 @@
             // 3. Slopes (Polylines)
             (leaflet.slopes || []).forEach(s => {
                 const coords = s.slope.coordinates.map(c => [c.latitude, c.longitude]);
-                if (coords.length === 1) {
-                    // Single point approach/descent
-                    L.circle(coords[0], { color: s.backgroundColor, radius: 2 }).addTo(group);
-                } else if (coords.length > 1) {
-                    // Path approach/descent
+                
+                // Use the distance directly from your Java Slope record
+                const dist = s.slope.distance;
+                const label = dist > 1000 ? (dist / 1000).toFixed(1) + " km" : dist + " m";
+            
+                if (coords.length > 1) {
                     let line = L.polyline(coords, { 
                         color: s.backgroundColor, 
                         weight: 4,
                         opacity: 0.8 
-                    });
-                    if (s.label) {
-                        line.bindTooltip(s.label, { 
+                    }).addTo(group);
+            
+                    if (dist > 0) {
+                        line.bindTooltip(label, { 
                             permanent: true, 
                             direction: 'center', 
                             className: 'buldreinfo-tooltip-compact' 
                         });
                     }
-                    line.addTo(group);
                 }
             });
 
