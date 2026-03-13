@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 app.post('/render', async (req, res) => {
-    console.log('--- NEW RENDER REQUEST ---');
+    console.log('--- RENDERING REQUEST ---');
     console.log(JSON.stringify(req.body, null, 2));
 
     const { 
@@ -15,9 +15,7 @@ app.post('/render', async (req, res) => {
     } = req.body;
 
     const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
-    const baseFontSize = 13;
-    const scaledFontSize = baseFontSize - (rockCount * 0.1);
-    const dynamicFontSize = Math.max(scaledFontSize, 8); // Never go below 8px
+    const dynamicFontSize = Math.max(13 - (rockCount * 0.1), 8);
 
     console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
 
@@ -28,7 +26,6 @@ app.post('/render', async (req, res) => {
         });
         const page = await browser.newPage();
         await page.setViewport({ width, height });
-        
         await page.goto('file:///app/render.html');
 
         await page.evaluate(async (payload) => {
@@ -38,11 +35,11 @@ app.post('/render', async (req, res) => {
         const imageBuffer = await page.screenshot({ type: 'png' });
         res.set('Content-Type', 'image/png').send(imageBuffer);
     } catch (err) {
-        console.error('Error:', err);
+        console.error('Render Error:', err);
         res.status(500).send('Failed');
     } finally {
         if (browser) await browser.close();
     }
 });
 
-app.listen(3000, () => console.log('Renderer running on port 3000'));
+app.listen(3000, () => console.log('Renderer Online'));

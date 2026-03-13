@@ -11,15 +11,33 @@
             background: white; border: 1px solid #444; border-radius: 4px;
             white-space: nowrap;
         }
-        .icon-box {
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-family: sans-serif; font-weight: bold;
-            border: 1.5px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.4);
-        }
-        .parking-box { background: #2D72D9; border-radius: 3px; }
-        .rock-box { background: #444; border-radius: 50%; }
+        
         /* Ensure no default Leaflet backgrounds on DivIcons */
         .leaflet-div-icon { background: transparent !important; border: none !important; }
+
+        /* BASE ICON STYLES */
+        .pin-marker {
+            width: 20px; height: 20px; border-radius: 50% 50% 50% 0;
+            position: absolute; left: 50%; top: 50%;
+            margin: -20px 0 0 -10px; box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+            transform: rotate(-45deg);
+        }
+        
+        /* PARKING SPECIFIC */
+        .parking-pin { background: #2D72D9; }
+        .parking-pin:after {
+            content: 'P'; color: white; font-family: sans-serif; font-weight: bold; font-size: 13px;
+            position: absolute; transform: rotate(45deg); left: 6px; top: 3px;
+        }
+
+        /* ROCK/BOULDER SPECIFIC */
+        .rock-pin { background: #444; }
+        .rock-label {
+            position: absolute; left: 24px; top: -18px; /* Offset text to the right and up */
+            color: #333; font-family: sans-serif; font-weight: bold;
+            white-space: nowrap; padding: 1px 3px; background: rgba(255,255,255,0.8);
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -31,28 +49,26 @@
             const group = L.featureGroup();
             
             (leaflet.markers || []).forEach(m => {
-                let html = '';
-                let className = 'icon-box ';
-                let size = [24, 24];
+                let divContent = '';
+                
+                let size = [60, 30]; 
 
                 if (m.iconType === 'PARKING') {
-                    html = 'P';
-                    className += 'parking-box';
+                    divContent = '<div class="pin-marker parking-pin"></div>';
                     size = [20, 20];
                 } else if (m.iconType === 'ROCK') {
-                    html = m.label || ''; 
-                    className += 'rock-box';
-                    // Scale circle size relative to font size
-                    const circleDim = dynamicFontSize * 2.1;
-                    size = [circleDim, circleDim];
+                    const html = m.label || ''; 
+                    const style = `font-size: ${dynamicFontSize}px;`;
+                    divContent = `<div class="pin-marker rock-pin"></div><div class="rock-label" style="${style}">${html}</div>`;
                 }
 
-                if (html) {
-                    const style = (m.iconType === 'ROCK') ? `font-size: ${dynamicFontSize}px;` : 'font-size: 13px;';
+                if (divContent) {
+                    const anchor = (m.iconType === 'ROCK') ? [10, 20] : [10, 20];
                     const icon = L.divIcon({
-                        html: `<div class="${className}" style="${style}">${html}</div>`,
+                        html: divContent,
+                        className: 'custom-div-icon',
                         iconSize: size,
-                        iconAnchor: [size[0]/2, size[1]/2]
+                        iconAnchor: anchor
                     });
                     L.marker([m.lat, m.lng], { icon }).addTo(group);
                 }
@@ -61,7 +77,7 @@
             (leaflet.outlines || []).forEach(o => {
                 if (o.polygonCoords) {
                     const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
-                    L.polygon(coords, { color: '#3388ff', weight: 3, fillOpacity: 0.2 }).addTo(group);
+                    L.polygon(coords, { color: '#3388ff', weight: 3, fillOpacity: 0.1 }).addTo(group);
                 }
             });
 
@@ -78,14 +94,14 @@
             });
 
             group.addTo(map);
-            if (group.getBounds().isValid()) map.fitBounds(group.getBounds().pad(0.1));
+            if (group.getBounds().isValid()) map.fitBounds(group.getBounds().pad(0.12));
 
             const tileUrl = leaflet.showPhotoNotMap 
                 ? 'https://waapi.webatlas.no/maptiles/tiles/webatlas-orto-newup/wa_grid/{z}/{x}/{y}.jpeg?api_key=b8e36d51-119a-423b-b156-d744d54123d5'
                 : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
             const tileLayer = L.tileLayer(tileUrl).addTo(map);
-            return new Promise(res => tileLayer.on('load', () => setTimeout(res, 1000)));
+            return new Promise(res => tileLayer.on('load', () => setTimeout(res, 1200)));
         }
     </script>
 </body>
