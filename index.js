@@ -35,7 +35,7 @@ app.post('/render', async (req, res) => {
         await page.setViewport({ width, height });
 
         // Load the local HTML file using the file:// protocol
-        await page.goto(`file://${path.join(__dirname, 'renderer.html')}`);
+        await page.goto('file:///app/renderer.html');
 
         // Execute map initialization inside the browser context
         await page.evaluate(async (data) => {
