@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 app.post('/render', async (req, res) => {
-    console.log('--- RENDERING REQUEST ---');
+    console.log('--- NEW RENDER REQUEST ---');
     console.log(JSON.stringify(req.body, null, 2));
 
     const { 
@@ -14,6 +14,13 @@ app.post('/render', async (req, res) => {
         showPhotoNotMap = false, width = 800, height = 600
     } = req.body;
 
+    const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
+    const baseFontSize = 13;
+    const scaledFontSize = baseFontSize - (rockCount * 0.1);
+    const dynamicFontSize = Math.max(scaledFontSize, 8); // Never go below 8px
+
+    console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
+
     let browser;
     try {
         browser = await puppeteer.launch({
@@ -21,11 +28,12 @@ app.post('/render', async (req, res) => {
         });
         const page = await browser.newPage();
         await page.setViewport({ width, height });
+        
         await page.goto('file:///app/render.html');
 
-        await page.evaluate(async (data) => {
-            await window.initMap(data);
-        }, { markers, outlines, slopes, defaultCenter, defaultZoom, showPhotoNotMap });
+        await page.evaluate(async (payload) => {
+            await window.initMap(payload.data, payload.fontSize);
+        }, { data: { markers, outlines, slopes, defaultCenter, defaultZoom, showPhotoNotMap }, fontSize: dynamicFontSize });
 
         const imageBuffer = await page.screenshot({ type: 'png' });
         res.set('Content-Type', 'image/png').send(imageBuffer);

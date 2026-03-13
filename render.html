@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        html, body, #map { margin: 0; height: 100%; width: 100%; background: #fff; }
+        html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; background: #fff; }
         .buldre-tooltip { 
-            padding: 2px 5px; font-size: 12px; font-weight: bold; 
+            padding: 2px 5px; font-size: 11px; font-weight: bold; 
             background: white; border: 1px solid #444; border-radius: 4px;
+            white-space: nowrap;
         }
         .icon-box {
             display: flex; align-items: center; justify-content: center;
             color: white; font-family: sans-serif; font-weight: bold;
-            border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            border: 1.5px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.4);
         }
-        .parking-box { background: #2D72D9; font-size: 14px; width: 22px; height: 22px; border-radius: 4px; }
-        .rock-box { background: #444; font-size: 13px; width: 26px; height: 26px; border-radius: 50%; }
+        .parking-box { background: #2D72D9; border-radius: 3px; }
+        .rock-box { background: #444; border-radius: 50%; }
+        /* Ensure no default Leaflet backgrounds on DivIcons */
+        .leaflet-div-icon { background: transparent !important; border: none !important; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
-        async function initMap(leaflet) {
+        async function initMap(leaflet, dynamicFontSize) {
             const map = L.map('map', { zoomControl: false, attributionControl: false })
                          .setView(leaflet.defaultCenter, leaflet.defaultZoom);
             const group = L.featureGroup();
@@ -29,37 +33,43 @@
             (leaflet.markers || []).forEach(m => {
                 let html = '';
                 let className = 'icon-box ';
-                let size = [26, 26];
+                let size = [24, 24];
 
                 if (m.iconType === 'PARKING') {
                     html = 'P';
                     className += 'parking-box';
-                    size = [22, 22];
+                    size = [20, 20];
                 } else if (m.iconType === 'ROCK') {
-                    // This uses the 'label' field from your Java record
                     html = m.label || ''; 
                     className += 'rock-box';
+                    // Scale circle size relative to font size
+                    const circleDim = dynamicFontSize * 2.1;
+                    size = [circleDim, circleDim];
                 }
 
-                const icon = L.divIcon({
-                    html: `<div class="${className}">${html}</div>`,
-                    className: 'custom-div-icon',
-                    iconSize: size,
-                    iconAnchor: [size[0]/2, size[1]/2]
-                });
-                L.marker([m.lat, m.lng], { icon }).addTo(group);
+                if (html) {
+                    const style = (m.iconType === 'ROCK') ? `font-size: ${dynamicFontSize}px;` : 'font-size: 13px;';
+                    const icon = L.divIcon({
+                        html: `<div class="${className}" style="${style}">${html}</div>`,
+                        iconSize: size,
+                        iconAnchor: [size[0]/2, size[1]/2]
+                    });
+                    L.marker([m.lat, m.lng], { icon }).addTo(group);
+                }
             });
 
             (leaflet.outlines || []).forEach(o => {
-                const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
-                L.polygon(coords, { color: '#3388ff', weight: 3 }).addTo(group);
+                if (o.polygonCoords) {
+                    const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
+                    L.polygon(coords, { color: '#3388ff', weight: 3, fillOpacity: 0.2 }).addTo(group);
+                }
             });
 
             (leaflet.slopes || []).forEach(s => {
                 const coords = s.slope.coordinates.map(c => [c.latitude, c.longitude]);
                 const dist = s.slope.distance;
                 if (coords.length > 1) {
-                    const line = L.polyline(coords, { color: s.backgroundColor, weight: 5, opacity: 0.9 }).addTo(group);
+                    const line = L.polyline(coords, { color: s.backgroundColor, weight: 5, opacity: 0.8 }).addTo(group);
                     if (dist > 0) {
                         const txt = dist > 1000 ? (dist / 1000).toFixed(1) + " km" : Math.round(dist) + " m";
                         line.bindTooltip(txt, { permanent: true, direction: 'center', className: 'buldre-tooltip' });
