@@ -17,7 +17,6 @@
             white-space: nowrap;
             box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
         }
-        /* Fix to ensure tooltips don't get cut off by tile edges */
         .leaflet-tooltip-pane { z-index: 650; }
     </style>
 </head>
@@ -31,16 +30,17 @@
             const parkingIcon = L.icon({ 
                 iconUrl: icons.parking, 
                 iconSize: [24, 24], 
-                iconAnchor: [12, 12] 
+                iconAnchor: [12, 12],
+                shadowUrl: null
             });
             
             const rockIcon = L.icon({ 
                 iconUrl: icons.rock, 
                 iconSize: [24, 24], 
-                iconAnchor: [12, 12] 
+                iconAnchor: [12, 12],
+                shadowUrl: null
             });
 
-            // 1. Markers
             (leaflet.markers || []).forEach(m => {
                 let icon = m.iconType === 'PARKING' ? parkingIcon : (m.iconType === 'ROCK' ? rockIcon : new L.Icon.Default());
                 let marker = L.marker([m.lat, m.lng], { icon });
@@ -53,7 +53,6 @@
                 marker.addTo(group);
             });
 
-            // 2. Outlines
             (leaflet.outlines || []).forEach(o => {
                 const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
                 let poly = L.polygon(coords, { color: '#3388ff', weight: 3 });
@@ -65,7 +64,6 @@
                 poly.addTo(group);
             });
 
-            // 3. Slopes
             (leaflet.slopes || []).forEach(s => {
                 const coords = s.slope.coordinates.map(c => [c.latitude, c.longitude]);
                 const dist = s.slope.distance;
