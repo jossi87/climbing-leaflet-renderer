@@ -6,38 +6,33 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; background: #fff; }
-        .buldre-tooltip { 
-            padding: 1px 3px; font-size: 10px; font-weight: bold; 
-            background: white; border: 1px solid #444; border-radius: 2px;
-            white-space: nowrap;
-        }
         
         .leaflet-div-icon { background: transparent !important; border: none !important; }
 
-        /* RED DOT STYLE - Smaller (5px) for less clutter */
+        /* Anchor Dot - Minimalist 4px */
         .dot-marker {
-            width: 5px; height: 5px; border-radius: 50%;
-            border: 1px solid white; box-shadow: 0 0 1px rgba(0,0,0,0.6);
+            width: 4px; height: 4px; border-radius: 50%;
+            border: 0.5px solid white; 
             display: flex; align-items: center; justify-content: center;
             background: #FF0000;
         }
         
-        /* PARKING STYLE */
         .parking-dot { 
-            background: #2D72D9; width: 14px; height: 14px; 
+            background: #2D72D9; width: 12px; height: 12px; 
             border-radius: 2px; color: white; font-family: sans-serif; 
-            font-size: 10px; font-weight: bold; 
+            font-size: 8px; font-weight: bold; 
         }
 
+        /* Ultra-tiny Label Style */
         .marker-label {
-            position: absolute; left: 8px; top: -6px;
+            position: absolute; left: 6px; top: -5px;
             color: #000; font-family: sans-serif; font-weight: bold;
             white-space: nowrap; 
-            padding: 0px 2px; 
-            background: rgba(255,255,255,0.6); /* More transparent labels */
-            border: 0.5px solid #999;
+            padding: 0px 1px; /* Tighter than tight */
+            background: rgba(255,255,255,0.5); /* High transparency */
+            border: none; /* Removed border to reduce visual noise */
             border-radius: 1px;
-            box-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.1);
+            text-shadow: 0.5px 0.5px 0px rgba(255,255,255,0.8);
         }
     </style>
 </head>
@@ -51,14 +46,14 @@
             
             (leaflet.markers || []).forEach(m => {
                 let html = '';
-                let size = [5, 5];
+                let size = [4, 4];
 
                 if (m.iconType === 'PARKING') {
                     html = `<div class="dot-marker parking-dot">P</div>`;
-                    size = [14, 14];
+                    size = [12, 12];
                 } else {
                     const isRock = m.iconType === 'ROCK';
-                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 9}px;`;
+                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 8}px;`;
                     html = `
                         <div class="dot-marker"></div>
                         <div class="marker-label" style="${labelStyle}">${m.label || ''}</div>
@@ -77,26 +72,26 @@
             (leaflet.outlines || []).forEach(o => {
                 if (o.polygonCoords) {
                     const coords = o.polygonCoords.split(';').map(c => c.split(',').map(Number));
-                    L.polygon(coords, { color: '#3388ff', weight: 2, fillOpacity: 0.1 }).addTo(group);
+                    L.polygon(coords, { color: '#3388ff', weight: 1.5, fillOpacity: 0.05 }).addTo(group);
                 }
             });
 
             (leaflet.slopes || []).forEach(s => {
                 const coords = s.slope.coordinates.map(c => [c.latitude, c.longitude]);
                 if (coords.length > 1) {
-                    L.polyline(coords, { color: s.backgroundColor, weight: 3, opacity: 0.6 }).addTo(group);
+                    L.polyline(coords, { color: s.backgroundColor, weight: 2, opacity: 0.5 }).addTo(group);
                 }
             });
 
             group.addTo(map);
-            if (group.getBounds().isValid()) map.fitBounds(group.getBounds().pad(0.12));
+            if (group.getBounds().isValid()) map.fitBounds(group.getBounds().pad(0.1));
 
             const tileUrl = leaflet.showPhotoNotMap 
                 ? 'https://waapi.webatlas.no/maptiles/tiles/webatlas-orto-newup/wa_grid/{z}/{x}/{y}.jpeg?api_key=b8e36d51-119a-423b-b156-d744d54123d5'
                 : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
             const tileLayer = L.tileLayer(tileUrl).addTo(map);
-            return new Promise(res => tileLayer.on('load', () => setTimeout(res, 1200)));
+            return new Promise(res => tileLayer.on('load', () => setTimeout(res, 1000)));
         }
     </script>
 </body>
