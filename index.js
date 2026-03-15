@@ -14,8 +14,9 @@ app.post('/render', async (req, res) => {
         showPhotoNotMap = false, width = 800, height = 600
     } = req.body;
 
+    // Adjusted dynamic font size logic to be smaller
     const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
-    const dynamicFontSize = Math.max(13 - (rockCount * 0.1), 8);
+    const dynamicFontSize = Math.max(11 - (rockCount * 0.1), 7);
 
     console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
 
@@ -25,7 +26,7 @@ app.post('/render', async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
-		await page.setUserAgent('Buldreinfo/Brattelinjer-PDF-Generator (jostein.oygarden@gmail.com)');
+        await page.setUserAgent('Buldreinfo/Brattelinjer-PDF-Generator (jostein.oygarden@gmail.com)');
         await page.setExtraHTTPHeaders({
             'Referer': 'https://buldreinfo.com/'
         });

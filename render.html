@@ -14,28 +14,28 @@
         
         .leaflet-div-icon { background: transparent !important; border: none !important; }
 
-        /* RED DOT STYLE - Used for Rocks and all other Markers */
+        /* RED DOT STYLE - Now smaller */
         .dot-marker {
-            width: 10px; height: 10px; border-radius: 50%;
-            border: 1.5px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.8);
+            width: 7px; height: 7px; border-radius: 50%;
+            border: 1px solid white; box-shadow: 0 0 2px rgba(0,0,0,0.8);
             display: flex; align-items: center; justify-content: center;
-            background: #FF0000; /* Bright Red */
+            background: #FF0000;
         }
         
-        /* PARKING STYLE - Stays Blue/Square for contrast */
+        /* PARKING STYLE - Reduced size slightly to match new scale */
         .parking-dot { 
-            background: #2D72D9; width: 18px; height: 18px; 
-            border-radius: 4px; color: white; font-family: sans-serif; 
-            font-size: 12px; font-weight: bold; 
+            background: #2D72D9; width: 16px; height: 16px; 
+            border-radius: 3px; color: white; font-family: sans-serif; 
+            font-size: 11px; font-weight: bold; 
         }
 
         .marker-label {
-            position: absolute; left: 16px; top: -10px;
+            position: absolute; left: 12px; top: -8px;
             color: #000; font-family: sans-serif; font-weight: bold;
-            white-space: nowrap; padding: 1px 4px; 
-            background: rgba(255,255,255,0.9); /* High opacity for readability */
-            border: 1px solid #666; border-radius: 3px;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            white-space: nowrap; padding: 1px 3px; 
+            background: rgba(255,255,255,0.7); /* Increased transparency */
+            border: 1px solid #888; border-radius: 2px;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -49,14 +49,14 @@
             
             (leaflet.markers || []).forEach(m => {
                 let html = '';
-                let size = [10, 10];
+                let size = [7, 7];
 
                 if (m.iconType === 'PARKING') {
                     html = `<div class="dot-marker parking-dot">P</div>`;
-                    size = [20, 20];
+                    size = [16, 16];
                 } else {
                     const isRock = m.iconType === 'ROCK';
-                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 12}px;`;
+                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 10}px;`;
                     html = `
                         <div class="dot-marker"></div>
                         <div class="marker-label" style="${labelStyle}">${m.label || ''}</div>
