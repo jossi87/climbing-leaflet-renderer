@@ -5,14 +5,6 @@ const app = express();
 app.use(express.json());
 
 app.post('/render', async (req, res) => {
-    const { 
-        markers = [], outlineimport express from 'express';
-import puppeteer from 'puppeteer';
-
-const app = express();
-app.use(express.json());
-
-app.post('/render', async (req, res) => {
     console.log('--- RENDERING REQUEST ---');
     console.log(JSON.stringify(req.body, null, 2));
 
@@ -23,7 +15,7 @@ app.post('/render', async (req, res) => {
     } = req.body;
 
     const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
-    // Base font is now 10px, scaling down to 6px to prevent clutter
+    // Base font is 10px, scaling down to 6px based on density
     const dynamicFontSize = Math.max(10 - (rockCount * 0.12), 6);
 
     console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
@@ -35,7 +27,7 @@ app.post('/render', async (req, res) => {
         });
         const page = await browser.newPage();
         
-        // RESTORED CODE: Setting User-Agent and Referer
+        // Headers preserved per instructions
         await page.setUserAgent('Buldreinfo/Brattelinjer-PDF-Generator (jostein.oygarden@gmail.com)');
         await page.setExtraHTTPHeaders({
             'Referer': 'https://buldreinfo.com/'
