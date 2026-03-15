@@ -5,6 +5,14 @@ const app = express();
 app.use(express.json());
 
 app.post('/render', async (req, res) => {
+    const { 
+        markers = [], outlineimport express from 'express';
+import puppeteer from 'puppeteer';
+
+const app = express();
+app.use(express.json());
+
+app.post('/render', async (req, res) => {
     console.log('--- RENDERING REQUEST ---');
     console.log(JSON.stringify(req.body, null, 2));
 
@@ -14,9 +22,9 @@ app.post('/render', async (req, res) => {
         showPhotoNotMap = false, width = 800, height = 600
     } = req.body;
 
-    // Adjusted dynamic font size logic to be smaller
     const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
-    const dynamicFontSize = Math.max(11 - (rockCount * 0.1), 7);
+    // Base font is now 10px, scaling down to 6px to prevent clutter
+    const dynamicFontSize = Math.max(10 - (rockCount * 0.12), 6);
 
     console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
 
@@ -26,10 +34,13 @@ app.post('/render', async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
+        
+        // RESTORED CODE: Setting User-Agent and Referer
         await page.setUserAgent('Buldreinfo/Brattelinjer-PDF-Generator (jostein.oygarden@gmail.com)');
         await page.setExtraHTTPHeaders({
             'Referer': 'https://buldreinfo.com/'
         });
+
         await page.setViewport({ width, height });
         await page.goto('file:///app/render.html');
 
