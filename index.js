@@ -5,15 +5,20 @@ const app = express();
 app.use(express.json());
 
 app.post('/render', async (req, res) => {
+    console.log('--- RENDERING REQUEST ---');
+    console.log(JSON.stringify(req.body, null, 2));
+
     const { 
         markers = [], outlines = [], slopes = [], 
         defaultCenter = { lat: 59, lng: 6 }, defaultZoom = 13, 
         showPhotoNotMap = false, width = 800, height = 600
     } = req.body;
 
-    // Aggressive scaling for high rock counts
+    // Bumped base to 12px and floor to 7px
     const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
-    const dynamicFontSize = Math.max(9 - (rockCount * 0.15), 5);
+    const dynamicFontSize = Math.max(12 - (rockCount * 0.15), 7);
+
+    console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
 
     let browser;
     try {

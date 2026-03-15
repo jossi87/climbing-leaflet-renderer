@@ -18,20 +18,21 @@
         }
         
         .parking-dot { 
-            background: #2D72D9; width: 12px; height: 12px; 
+            background: #2D72D9; width: 14px; height: 14px; 
             border-radius: 2px; color: white; font-family: sans-serif; 
-            font-size: 8px; font-weight: bold; 
+            font-size: 9px; font-weight: bold; 
         }
 
-        /* Ultra-tiny Label Style */
+        /* Tiny Label Style - Optimized for readability */
         .marker-label {
-            position: absolute; left: 6px; top: -5px;
+            position: absolute; left: 6px; top: -6px;
             color: #000; font-family: sans-serif; font-weight: bold;
             white-space: nowrap; 
-            padding: 0px 1px; /* Tighter than tight */
-            background: rgba(255,255,255,0.5); /* High transparency */
-            border: none; /* Removed border to reduce visual noise */
+            padding: 0px 2px;
+            background: rgba(255,255,255,0.6); 
+            border: none; 
             border-radius: 1px;
+            letter-spacing: -0.2px; /* Helps with small font clarity */
             text-shadow: 0.5px 0.5px 0px rgba(255,255,255,0.8);
         }
     </style>
@@ -50,10 +51,10 @@
 
                 if (m.iconType === 'PARKING') {
                     html = `<div class="dot-marker parking-dot">P</div>`;
-                    size = [12, 12];
+                    size = [14, 14];
                 } else {
                     const isRock = m.iconType === 'ROCK';
-                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 8}px;`;
+                    const labelStyle = `font-size: ${isRock ? dynamicFontSize : 9}px;`;
                     html = `
                         <div class="dot-marker"></div>
                         <div class="marker-label" style="${labelStyle}">${m.label || ''}</div>
