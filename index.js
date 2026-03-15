@@ -25,6 +25,10 @@ app.post('/render', async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
+		await page.setUserAgent('Buldreinfo/Brattelinjer-PDF-Generator (jostein.oygarden@gmail.com)');
+        await page.setExtraHTTPHeaders({
+            'Referer': 'https://buldreinfo.com/'
+        });
         await page.setViewport({ width, height });
         await page.goto('file:///app/render.html');
 
