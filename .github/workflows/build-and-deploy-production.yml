@@ -48,6 +48,7 @@ jobs:
           script: |
             set -eu
             cd /opt/varden-infra
+            docker compose down climbing-leaflet-renderer --remove-orphans
             docker compose pull climbing-leaflet-renderer
             docker compose up -d climbing-leaflet-renderer
             docker image prune -f
