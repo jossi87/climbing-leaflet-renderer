@@ -46,9 +46,12 @@ jobs:
           username: root
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            exec 200>/var/lock/docker-deploy.lock
+            flock -x 200
             set -eu
             cd /opt/varden-infra
             docker compose down climbing-leaflet-renderer --remove-orphans
+            docker rmi jossi87/climbing-leaflet-renderer:latest || true
             docker compose pull climbing-leaflet-renderer
             docker compose up -d climbing-leaflet-renderer
             docker image prune -f
