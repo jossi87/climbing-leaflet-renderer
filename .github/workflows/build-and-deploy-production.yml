@@ -30,7 +30,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: jossi87/climbing-leaflet-renderer:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/climbing-leaflet-renderer:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -51,7 +51,7 @@ jobs:
             set -eu
             cd /opt/varden-infra
             docker compose down climbing-leaflet-renderer --remove-orphans
-            docker rmi jossi87/climbing-leaflet-renderer:latest || true
+            docker rmi ${{ secrets.DOCKERHUB_USERNAME }}/climbing-leaflet-renderer:latest || true
             docker compose pull climbing-leaflet-renderer
             docker compose up -d climbing-leaflet-renderer
             docker image prune -f
