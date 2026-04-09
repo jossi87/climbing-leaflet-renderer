@@ -4,35 +4,40 @@ import puppeteer from 'puppeteer';
 const app = express();
 app.use(express.json());
 
-app.post('/render', async (req, res) => {
-    console.log('--- RENDERING REQUEST ---');
-    console.log(JSON.stringify(req.body, null, 2));
+let browser;
 
+async function getBrowser() {
+    if (!browser || !browser.connected) {
+        browser = await puppeteer.launch({
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage'
+            ]
+        });
+    }
+    return browser;
+}
+
+app.post('/render', async (req, res) => {
     const { 
         markers = [], outlines = [], slopes = [], 
         defaultCenter = { lat: 59, lng: 6 }, defaultZoom = 13, 
         showPhotoNotMap = false, width = 800, height = 600
     } = req.body;
 
-    // Bumped base to 12px and floor to 7px
     const rockCount = markers.filter(m => m.iconType === 'ROCK').length;
     const dynamicFontSize = Math.max(12 - (rockCount * 0.15), 7);
 
-    console.log(`Rendering ${rockCount} rocks. Font size: ${dynamicFontSize}px`);
-
-    let browser;
+    let page;
     try {
-        browser = await puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-        const page = await browser.newPage();
+        const browserInstance = await getBrowser();
+        page = await browserInstance.newPage();
         
         await page.setUserAgent('Buldreinfo/Brattelinjer-PDF-Generator (jostein.oygarden@gmail.com)');
-        await page.setExtraHTTPHeaders({
-            'Referer': 'https://buldreinfo.com/'
-        });
-
+        await page.setExtraHTTPHeaders({ 'Referer': 'https://buldreinfo.com/' });
         await page.setViewport({ width, height });
+        
         await page.goto('file:///app/render.html');
 
         await page.evaluate(async (payload) => {
@@ -45,7 +50,7 @@ app.post('/render', async (req, res) => {
         console.error('Render Error:', err);
         res.status(500).send('Failed');
     } finally {
-        if (browser) await browser.close();
+        if (page) await page.close();
     }
 });
 
